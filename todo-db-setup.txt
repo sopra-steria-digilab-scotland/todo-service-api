@@ -1,0 +1,8 @@
+docker pull mongo
+docker run --name localdb -d -p 27017:27017 -v ~/data:/data/db mongo
+docker container start localdb
+docker container exec -it localdb bash
+
+mongo
+use todo
+db.createUser({user: "user", pwd:"digilab", roles:["readWrite"]})

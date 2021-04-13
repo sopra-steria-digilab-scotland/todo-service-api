@@ -1,0 +1,24 @@
+kind: "BuildConfig"
+apiVersion: "v1"
+metadata:
+  name: "todo-pipeline"
+spec:
+  strategy:
+    jenkinsPipelineStrategy:
+      jenkinsfile: |-
+        // path of the template to use
+node('maven'){ 
+stage '1: Build the applications in the Dev Environment'
+openshiftBuild(namespace: 'shehzad-todo-app', buildConfig: 'todo-service-api', showBuildLogs: 'true')
+ 
+ stage '2: Manual Check and Tag the images for test'
+def userInput1 = input( id: 'userInput', message: 'OK to tag dev images to test?', parameters: [ [$class: 'TextParameterDefinition', defaultValue: 'Add Message Here', description: 'comments', name: 'comments'] ]) 
+ openshiftTag(namespace: 'shehzad-todo-app', sourceStream: 'todo-service-api', sourceTag: 'latest', destinationStream: 'todo-service-api', destinationTag: 'deployToTest')
+ 
+ stage '3: Deploy to the TEST Environment'
+ def userInput2 = input( id: 'userInput', message: 'OK to deploy to Test Environment?', parameters: [ [$class: 'TextParameterDefinition', defaultValue: 'Add Message Here', description: 'comments', name: 'comments'] ]) 
+ openshiftDeploy(namespace: 'shehzad-todo-app-test', deploymentConfig: 'todo-service-api')
+ 
+
+}
+      type: JenkinsPipeline
