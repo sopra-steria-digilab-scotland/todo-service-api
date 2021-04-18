@@ -5,4 +5,4 @@ docker container exec -it localdb bash
 
 mongo
 use todo
-db.createUser({user: "user", pwd:"digilab", roles:["readWrite"]})
+db.createUser({user: "user", pwd:"h@ck@th0n", roles:["readWrite"]})

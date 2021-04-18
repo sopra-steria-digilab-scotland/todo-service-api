@@ -1,14 +1,48 @@
 kind: "BuildConfig"
-apiVersion: "v1"
+apiVersion: "build.openshift.io/v1"
 metadata:
-  name: "todo-pipeline"
+  name: "todo-api-pipeline"
 spec:
   strategy:
     jenkinsPipelineStrategy:
       jenkinsfile: |-
-        // path of the template to use
-        node('maven'){ 
-        stage '1: Build the applications in the Dev Environment'
-        openshiftBuild(namespace: 'shehzad-todo-app', buildConfig: 'todo-service-api', showBuildLogs: 'true')
+        def templateName = 'todo-service-api-git' 
+        pipeline {
+          agent {
+            node {
+              label 'maven' 
+            }
+          }
+          options {
+            timeout(time: 20, unit: 'MINUTES') 
+          }
+          stages {
+            stage('preamble') {
+                steps {
+                    script {
+                        openshift.withCluster() {
+                            openshift.withProject() {
+                                echo "Using project: ${openshift.project()}"
+                            }
+                        }
+                    }
+                }
+            }
+            stage('build') {
+              steps {
+                script {
+                    echo "-- Starting the build ---"
+                    openshift.withCluster() {
+                        openshift.withProject() {
+                          def bc = openshift.selector("bc", templateName)
+                          def build = bc.startBuild().logs('-f')
+                          echo "-- End the build ---"
+                        }
+                    }
+                }
+              }
+            }
+          }
         }
+
       type: JenkinsPipeline
